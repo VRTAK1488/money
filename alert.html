@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Banda Alert</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: white;
+      font-family: 'Arial Black', 'Impact', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Золотой дождь */
+    #particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .particle {
+      position: absolute;
+      font-size: 28px;
+      opacity: 0;
+      animation: fall 7s infinite ease-in;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 0.9;
+      }
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 0 30px;
+      max-width: 90%;
+    }
+
+    .logo {
+      font-size: 2.8em;
+      margin-bottom: 30px;
+      color: gold;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.9);
+      letter-spacing: 2px;
+    }
+
+    #manager-name {
+      font-size: 4.8em;
+      margin: 15px 0;
+      background: linear-gradient(90deg, #ffd700, #ff8c00, #ffd700);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+      animation: glow 2.5s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 25px rgba(255, 215, 0, 0.8); }
+      to { text-shadow: 0 0 50px gold, 0 0 80px gold; }
+    }
+
+    #amount {
+      font-size: 3.8em;
+      color: #ffcc00;
+      margin: 15px 0;
+      text-shadow: 0 0 20px rgba(255, 204, 0, 0.9);
+    }
+
+    #geo {
+      font-size: 2.1em;
+      color: #ccc;
+      margin-top: 25px;
+      font-weight: normal;
+    }
+
+    /* Скрыть курсор на ТВ */
+    body:fullscreen {
+      cursor: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="particles"></div>
+  <div class="content">
+    <div class="logo">Banda Vonyuchiy Veter</div>
+    <div id="manager-name">—</div>
+    <div id="amount">—</div>
+    <div id="geo">—</div>
+  </div>
+
+  <!-- Звук -->
+  <audio id="fanfare" src="fanfare.mp3" preload="auto"></audio>
+
+  <script>
+    // Генерация частиц
+    function createParticles() {
+      const icons = ['🪙', '🏆', '✨', '🎯', '🌟', '💎', '🔥'];
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 40; i++) {
+        const el = document.createElement('div');
+        el.className = 'particle';
+        el.textContent = icons[Math.floor(Math.random() * icons.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.animationDelay = Math.random() * 6 + 's';
+        el.style.fontSize = (20 + Math.random() * 25) + 'px';
+        container.appendChild(el);
+      }
+    }
+
+    // Обновление контента извне
+    window.updateContent = function(name, amount, geo) {
+      document.getElementById('manager-name').textContent = name;
+      document.getElementById('amount').textContent = '+' + amount;
+      document.getElementById('geo').textContent = geo;
+
+      // Воспроизводим звук
+      const audio = document.getElementById('fanfare');
+      audio.currentTime = 0;
+      audio.play().catch(e => console.log("Audio play blocked:", e));
+    };
+
+    // При загрузке
+    window.onload = () => {
+      createParticles();
+      // Автоматически закрыть через 8 секунд
+      setTimeout(() => {
+        window.close();
+      }, 8000);
+    };
+  </script>
+</body>
+</html>
