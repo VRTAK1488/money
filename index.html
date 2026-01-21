@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Banda Vonyuchiy Veter</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: linear-gradient(135deg, #fffbe6, #fff5cc);
+      color: #333;
+      font-family: 'Arial Black', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* === Панель управления (ADMIN) === */
+    #control-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      background: #fff;
+      padding: 28px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      width: 92%;
+      max-width: 520px;
+      text-align: center;
+    }
+
+    .logo-control {
+      font-size: 2.0em;
+      color: #d4af37;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      text-align: left;
+      margin-top: 8px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.6px;
+      color: #666;
+      margin: 0 0 6px 2px;
+      text-transform: uppercase;
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 14px 14px;
+      border-radius: 12px;
+      border: 2px solid #ddd;
+      font-size: 16px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      height: 52px;
+      background: #fff;
+    }
+
+    input[type="number"] {
+      appearance: textfield;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #d4af37;
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+    }
+
+    .hint {
+      font-family: Arial, sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      color: #888;
+      margin-top: -4px;
+      text-align: center;
+    }
+
+    button {
+      background: linear-gradient(to right, #d4af37, #ffcc00);
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      font-size: 18px;
+      margin-top: 6px;
+    }
+
+    button:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.35);
+    }
+
+    .admin-status {
+      margin-top: 10px;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #777;
+      text-align: center;
+    }
+
+    /* === Экран алерта (TV) === */
+    #alert-screen {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      position: relative;
+      background: linear-gradient(135deg, #fffbe6, #fff5cc);
+      padding: 24px;
+    }
+
+    #particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .particle {
+      position: absolute;
+      font-size: 26px;
+      opacity: 0;
+      animation: fall 5s infinite ease-in;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+    }
+
+    @keyframes fall {
+      0%   { transform: translateY(-120px) rotate(0deg);   opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 0.9; }
+      100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
+
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 0 18px;
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    .logo-alert {
+      font-size: 2.6em;
+      margin-bottom: 18px;
+      color: #d4af37;
+      text-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+      letter-spacing: 2px;
+    }
+
+    #manager-name {
+      font-size: clamp(2.6em, 6vw, 5.0em);
+      margin: 10px 0;
+      color: #d4af37;
+      text-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+      animation: pulse 2s infinite alternate;
+      word-break: break-word;
+    }
+
+    @keyframes pulse {
+      from { text-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+      to   { text-shadow: 0 0 40px #d4af37; }
+    }
+
+    #amountDisplay {
+      font-size: clamp(2.2em, 5vw, 4.0em);
+      color: #ff9900;
+      margin: 12px 0;
+      text-shadow: 0 0 15px rgba(255, 153, 0, 0.5);
+      font-weight: 900;
+      background: rgba(255, 255, 255, 0.35);
+      padding: 12px 22px;
+      border-radius: 14px;
+      display: inline-block;
+      border: 2px solid rgba(255, 153, 0, 0.25);
+    }
+
+    #geo {
+      font-size: clamp(1.4em, 3vw, 2.2em);
+      color: #777;
+      margin-top: 14px;
+      font-family: Arial, sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+    }
+
+    /* Overlay для включения звука */
+    #sound-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.55);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+
+    #sound-overlay .box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 22px;
+      max-width: 520px;
+      width: 92%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+      font-family: Arial, sans-serif;
+      font-weight: 800;
+    }
+
+    #sound-overlay .box h2 {
+      margin-bottom: 10px;
+      color: #d4af37;
+      font-family: 'Arial Black', sans-serif;
+      letter-spacing: 1px;
+    }
+
+    #sound-overlay .box p {
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 14px;
+      line-height: 1.35;
+    }
+
+    #sound-overlay .box button {
+      width: 100%;
+      height: 52px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 900;
+      background: linear-gradient(to right, #d4af37, #ffcc00);
+    }
+
+    /* TV режим: форма не нужна */
+    body.tv #control-panel { display: none !important; }
+  </style>
+</head>
+
+<body>
+
+  <!-- Аудио (положи sound.mp3 рядом с index.html в репо) -->
+  <audio id="coinAudio" preload="auto" loop>
+    <source src="sound.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- ADMIN panel -->
+  <div id="control-panel">
+    <div class="logo-control">Banda Vonyuchiy Veter</div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="employee">Employee</label>
+        <select id="employee">
+          <option value="">— Select Employee —</option>
+          <option value="Martin Jarosz">Martin Jarosz</option>
+          <option value="Marko Kovac">Marko Kovac</option>
+          <option value="Pan Oto">Pan Oto</option>
+          <option value="Maros Vrtak">Maros Vrtak</option>
+          <option value="Jan Kowalski">Jan Kowalski</option>
+          <option value="Anna Kralova">Anna Kralova</option>
+          <option value="Robert Molnár">Robert Molnár</option>
+          <option value="Martin Němec">Martin Němec</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="country">Country / Geo</label>
+        <select id="country">
+          <option value="Czechia">Czechia</option>
+          <option value="Slovakia">Slovakia</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="amountInput">Amount (USD)</label>
+        <input type="number" id="amountInput" placeholder="e.g. 1500" min="1" step="1" inputmode="numeric" />
+        <div class="hint">Will show as: <b>$1,500 USD</b></div>
+      </div>
+
+      <button id="showBtn" type="button">🚀 Show on TV</button>
+
+      <div class="admin-status" id="adminStatus">
+        Open TV window: <b>?tv=1</b> (same browser, same PC).
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERT screen (TV) -->
+  <div id="alert-screen">
+    <div id="particles"></div>
+    <div class="content">
+      <div class="logo-alert">Banda Vonyuchiy Veter</div>
+      <div id="manager-name">Waiting…</div>
+      <div id="amountDisplay">—</div>
+      <div id="geo">—</div>
+    </div>
+  </div>
+
+  <!-- Sound overlay -->
+  <div id="sound-overlay">
+    <div class="box">
+      <h2>Enable Sound</h2>
+      <p>
+        Browser blocked autoplay. Click once on the TV window to enable the sound.
+        Make sure <b>sound.mp3</b> exists рядом с <b>index.html</b>.
+      </p>
+      <button id="enableSoundBtn" type="button">🔊 Enable sound</button>
+    </div>
+  </div>
+
+  <script>
+    const isTV = new URLSearchParams(location.search).get('tv') === '1';
+    if (isTV) document.body.classList.add('tv');
+
+    const ALERT_MS = 8000;
+    const STORAGE_KEY = 'bvv_money_alert_payload_v2';
+
+    let autoCloseTimer = null;
+
+    const coinAudio = document.getElementById('coinAudio');
+
+    function showSoundOverlay(show) {
+      document.getElementById('sound-overlay').style.display = show ? 'flex' : 'none';
+    }
+
+    async function tryPlayLoopAudio() {
+      try {
+        coinAudio.currentTime = 0;
+        coinAudio.volume = 0.9;
+        await coinAudio.play(); // если браузер блокирует — улетим в catch
+        showSoundOverlay(false);
+        return true;
+      } catch (e) {
+        showSoundOverlay(true);
+        return false;
+      }
+    }
+
+    function stopLoopAudio() {
+      try {
+        coinAudio.pause();
+        coinAudio.currentTime = 0;
+      } catch {}
+    }
+
+    function createParticles() {
+      // крипто-значки (легкие, без картинок и без доп. файлов)
+      // ₿ bitcoin, ₮ tether, Ξ ethereum, 🪙 coin
+      const icons = ['₿', '₮', 'Ξ', '🪙', '₿', '₮', 'Ξ'];
+      const container = document.getElementById('particles');
+      container.innerHTML = '';
+      for (let i = 0; i < 55; i++) {
+        const el = document.createElement('div');
+        el.className = 'particle';
+        el.textContent = icons[Math.floor(Math.random() * icons.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.animationDelay = Math.random() * 4 + 's';
+        el.style.fontSize = (18 + Math.random() * 20) + 'px';
+        container.appendChild(el);
+      }
+    }
+
+    function formatUsd(amountNumber) {
+      return `$${amountNumber.toLocaleString('en-US')} USD`;
+    }
+
+    async function renderAlert(payload) {
+      document.getElementById('manager-name').textContent = payload.name || '—';
+      document.getElementById('amountDisplay').textContent = formatUsd(payload.amount || 0);
+      document.getElementById('geo').textContent = payload.country || '—';
+
+      document.getElementById('alert-screen').style.display = 'flex';
+
+      createParticles();
+
+      // звук на всю длительность алерта
+      await tryPlayLoopAudio();
+
+      if (autoCloseTimer) clearTimeout(autoCloseTimer);
+      autoCloseTimer = setTimeout(goBack, ALERT_MS);
+    }
+
+    function goBack() {
+      stopLoopAudio();
+
+      // TV остаётся на экране ожидания
+      if (isTV) {
+        document.getElementById('alert-screen').style.display = 'flex';
+        document.getElementById('manager-name').textContent = 'Waiting…';
+        document.getElementById('amountDisplay').textContent = '—';
+        document.getElementById('geo').textContent = '—';
+      } else {
+        document.getElementById('alert-screen').style.display = 'none';
+        document.getElementById('control-panel').style.display = 'block';
+      }
+    }
+
+    function sendToTV(payload) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function showAlertFromAdmin() {
+      const name = document.getElementById('employee').value;
+      const country = document.getElementById('country').value;
+      const raw = document.getElementById('amountInput').value;
+
+      if (!name) {
+        alert("Please select employee.");
+        return;
+      }
+
+      const amount = Number.parseInt(raw, 10);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        alert("Please enter a valid amount (integer, >= 1).");
+        return;
+      }
+
+      const payload = { name, country, amount, ts: Date.now() };
+
+      // отправляем в TV окно
+      sendToTV(payload);
+
+      // чтобы было видно что отправилось
+      document.getElementById('adminStatus').textContent =
+        `Sent to TV: ${name} — ${formatUsd(amount)} — ${country}`;
+    }
+
+    function onStorageEvent(e) {
+      if (e.key !== STORAGE_KEY || !e.newValue) return;
+      try {
+        const payload = JSON.parse(e.newValue);
+        if (!payload || !payload.ts) return;
+        renderAlert(payload);
+      } catch {}
+    }
+
+    // overlay button
+    document.getElementById('enableSoundBtn').addEventListener('click', () => {
+      tryPlayLoopAudio();
+    });
+
+    if (isTV) {
+      document.getElementById('alert-screen').style.display = 'flex';
+      document.getElementById('control-panel').style.display = 'none';
+
+      window.addEventListener('storage', onStorageEvent);
+
+      // клик по ТВ-окну тоже пробует включить звук (чтобы снять блок браузера)
+      document.body.addEventListener('click', () => {
+        tryPlayLoopAudio();
+      }, { once: true });
+
+      // если есть последнее событие — можно показать сразу (за последние 5 минут)
+      try {
+        const existing = localStorage.getItem(STORAGE_KEY);
+        if (existing) {
+          const payload = JSON.parse(existing);
+          if (payload && payload.ts && (Date.now() - payload.ts) < 5 * 60 * 1000) {
+            renderAlert(payload);
+          }
+        }
+      } catch {}
+
+    } else {
+      document.getElementById('alert-screen').style.display = 'none';
+      document.getElementById('showBtn').addEventListener('click', showAlertFromAdmin);
+      document.getElementById('amountInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') showAlertFromAdmin();
+      });
+    }
+  </script>
+</body>
+</html>
