@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Banda Vonyuchiy Veter</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: linear-gradient(135deg, #fffbe6, #fff5cc);
+      color: #333;
+      font-family: 'Arial Black', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* === Панель управления (ADMIN) === */
+    #control-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      background: #fff;
+      padding: 28px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      width: 92%;
+      max-width: 520px;
+      text-align: center;
+    }
+
+    .logo-control {
+      font-size: 2.0em;
+      color: #d4af37;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      text-align: left;
+      margin-top: 8px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.6px;
+      color: #666;
+      margin: 0 0 6px 2px;
+      text-transform: uppercase;
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 14px 14px;
+      border-radius: 12px;
+      border: 2px solid #ddd;
+      font-size: 16px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      height: 52px;
+      background: #fff;
+    }
+
+    input[type="number"] {
+      appearance: textfield;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #d4af37;
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+    }
+
+    .hint {
+      font-family: Arial, sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      color: #888;
+      margin-top: -4px;
+      text-align: center;
+    }
+
+    button {
+      background: linear-gradient(to right, #d4af37, #ffcc00);
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      font-size: 18px;
+      margin-top: 6px;
+    }
+
+    button:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.35);
+    }
+
+    .admin-status {
+      margin-top: 10px;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #777;
+      text-align: center;
+    }
+
+    /* === Экран алерта (TV) === */
+    #alert-screen {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      position: relative;
+      background: linear-gradient(135deg, #fffbe6, #fff5cc);
+      padding: 24px;
+    }
+
+    #particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .particle {
+      position: absolute;
+      font-size: 28px;
+      opacity: 0;
+      animation: fall 5s infinite ease-in;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-120px) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 0.85; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 0 18px;
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    .logo-alert {
+      font-size: 2.6em;
+      margin-bottom: 18px;
+      color: #d4af37;
+      text-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+      letter-spacing: 2px;
+    }
+
+    #manager-name {
+      font-size: clamp(2.6em, 6vw, 5.0em);
+      margin: 10px 0;
+      color: #d4af37;
+      text-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+      animation: pulse 2s infinite alternate;
+      word-break: break-word;
+    }
+
+    @keyframes pulse {
+      from { text-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+      to   { text-shadow: 0 0 40px #d4af37; }
+    }
+
+    #amountDisplay {
+      font-size: clamp(2.2em, 5vw, 4.0em);
+      color: #ff9900;
+      margin: 12px 0;
+      text-shadow: 0 0 15px rgba(255, 153, 0, 0.5);
+      font-weight: 900;
+      background: rgba(255, 255, 255, 0.35);
+      padding: 12px 22px;
+      border-radius: 14px;
+      display: inline-block;
+      border: 2px solid rgba(255, 153, 0, 0.25);
+    }
+
+    #geo {
+      font-size: clamp(1.4em, 3vw, 2.2em);
+      color: #777;
+      margin-top: 14px;
+      font-family: Arial, sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+    }
+
+    /* Overlay для включения звука (если браузер блокирует autoplay) */
+    #sound-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.55);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+
+    #sound-overlay .box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 22px;
+      max-width: 520px;
+      width: 92%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+      font-family: Arial, sans-serif;
+      font-weight: 800;
+    }
+
+    #sound-overlay .box h2 {
+      margin-bottom: 10px;
+      color: #d4af37;
+      font-family: 'Arial Black', sans-serif;
+      letter-spacing: 1px;
+    }
+
+    #sound-overlay .box p {
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 14px;
+      line-height: 1.35;
+    }
+
+    #sound-overlay .box button {
+      width: 100%;
+      height: 52px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 900;
+      background: linear-gradient(to right, #d4af37, #ffcc00);
+    }
+
+    /* Back (в админ-режиме можно оставить, в TV обычно не нужен) */
+    #back-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      background: rgba(212, 175, 55, 0.85);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      font-size: 20px;
+      cursor: pointer;
+      display: none;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    #back-btn:hover { background: #d4af37; }
+
+    /* TV режим: форма не нужна */
+    body.tv #control-panel { display: none !important; }
+  </style>
+</head>
+
+<body>
+
+  <!-- ADMIN panel -->
+  <div id="control-panel">
+    <div class="logo-control">Banda Vonyuchiy Veter</div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="employee">Employee</label>
+        <select id="employee">
+          <option value="">— Select Employee —</option>
+          <option value="Martin Jarosz">Martin Jarosz</option>
+          <option value="Marko Kovac">Marko Kovac</option>
+          <option value="Pan Oto">Pan Oto</option>
+          <option value="Maros Vrtak">Maros Vrtak</option>
+          <option value="Jan Kowalski">Jan Kowalski</option>
+          <option value="Anna Kralova">Anna Kralova</option>
+          <option value="Robert Molnár">Robert Molnár</option>
+          <option value="Martin Němec">Martin Němec</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="country">Country / Geo</label>
+        <select id="country">
+          <option value="Czechia">Czechia</option>
+          <option value="Slovakia">Slovakia</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="amountInput">Amount (USD)</label>
+        <input type="number" id="amountInput" placeholder="e.g. 1500" min="1" step="1" inputmode="numeric" />
+        <div class="hint">Will show as: <b>$1,500 USD</b></div>
+      </div>
+
+      <button id="showBtn" type="button">🎉 Show on TV</button>
+
+      <div class="admin-status" id="adminStatus">
+        Tip: Open TV window with <b>?tv=1</b> on the second screen/TV.
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERT screen (TV) -->
+  <div id="alert-screen">
+    <div id="particles"></div>
+    <div class="content">
+      <div class="logo-alert">Banda Vonyuchiy Veter</div>
+      <div id="manager-name">Waiting…</div>
+      <div id="amountDisplay">—</div>
+      <div id="geo">—</div>
+    </div>
+  </div>
+
+  <!-- Sound overlay -->
+  <div id="sound-overlay">
+    <div class="box">
+      <h2>Enable Sound</h2>
+      <p>
+        Browser blocked autoplay. Click the button once on the TV window to enable coin sound.
+      </p>
+      <button id="enableSoundBtn" type="button">🔊 Enable sound</button>
+    </div>
+  </div>
+
+  <button id="back-btn" onclick="goBack()">🔙</button>
+
+  <script>
+    // ===== Mode =====
+    const isTV = new URLSearchParams(location.search).get('tv') === '1';
+    if (isTV) document.body.classList.add('tv');
+
+    // ===== Config =====
+    const ALERT_MS = 8000;
+    const STORAGE_KEY = 'bvv_money_alert_payload_v1';
+
+    // ===== Timers =====
+    let autoCloseTimer = null;
+    let coinLoopTimer = null;
+
+    // ===== Audio (coin loop) =====
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioCtx;
+    }
+
+    function showSoundOverlay(show) {
+      const el = document.getElementById('sound-overlay');
+      el.style.display = show ? 'flex' : 'none';
+    }
+
+    async function ensureAudioRunning() {
+      try {
+        const ctx = getAudioCtx();
+        if (ctx.state === 'suspended') {
+          await ctx.resume();
+        }
+        showSoundOverlay(false);
+        return true;
+      } catch (e) {
+        // если не получилось — покажем оверлей
+        showSoundOverlay(true);
+        return false;
+      }
+    }
+
+    function coinTick() {
+      // один короткий "дзынь"
+      try {
+        const ctx = getAudioCtx();
+        const now = ctx.currentTime;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.value = 800 + Math.random() * 600;
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.17);
+      } catch (e) {
+        // тихо игнорируем
+      }
+    }
+
+    function startCoinLoop() {
+      stopCoinLoop();
+      coinTick();
+      coinLoopTimer = setInterval(coinTick, 320);
+    }
+
+    function stopCoinLoop() {
+      if (coinLoopTimer) {
+        clearInterval(coinLoopTimer);
+        coinLoopTimer = null;
+      }
+    }
+
+    // ===== Particles =====
+    function createParticles() {
+      const icons = ['🪙', '✨', '🌟', '💎'];
+      const container = document.getElementById('particles');
+      container.innerHTML = '';
+      for (let i = 0; i < 40; i++) {
+        const el = document.createElement('div');
+        el.className = 'particle';
+        el.textContent = icons[Math.floor(Math.random() * icons.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.animationDelay = Math.random() * 4 + 's';
+        el.style.fontSize = (20 + Math.random() * 25) + 'px';
+        container.appendChild(el);
+      }
+    }
+
+    // ===== Formatting =====
+    function formatUsd(amountNumber) {
+      return `$${amountNumber.toLocaleString('en-US')} USD`;
+    }
+
+    // ===== Show alert (used by TV and can be used by ADMIN too) =====
+    async function renderAlert(payload) {
+      // payload: {name, country, amount, ts}
+      document.getElementById('manager-name').textContent = payload.name || '—';
+      document.getElementById('amountDisplay').textContent = formatUsd(payload.amount || 0);
+      document.getElementById('geo').textContent = payload.country || '—';
+
+      document.getElementById('alert-screen').style.display = 'flex';
+
+      createParticles();
+
+      // попытаться включить звук
+      const ok = await ensureAudioRunning();
+      if (ok) startCoinLoop();
+
+      if (autoCloseTimer) clearTimeout(autoCloseTimer);
+      autoCloseTimer = setTimeout(goBack, ALERT_MS);
+    }
+
+    function goBack() {
+      stopCoinLoop();
+      document.getElementById('alert-screen').style.display = isTV ? 'flex' : 'none';
+      if (!isTV) {
+        document.getElementById('control-panel').style.display = 'block';
+      }
+      document.getElementById('back-btn').style.display = 'none';
+
+      // В TV режиме после закрытия просто показываем ожидание
+      if (isTV) {
+        document.getElementById('manager-name').textContent = 'Waiting…';
+        document.getElementById('amountDisplay').textContent = '—';
+        document.getElementById('geo').textContent = '—';
+      }
+    }
+
+    // ===== ADMIN: send payload to TV via localStorage =====
+    function sendToTV(payload) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function showAlertFromAdmin() {
+      const name = document.getElementById('employee').value;
+      const country = document.getElementById('country').value;
+      const raw = document.getElementById('amountInput').value;
+
+      if (!name) {
+        alert("Please select employee.");
+        return;
+      }
+
+      const amount = Number.parseInt(raw, 10);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        alert("Please enter a valid amount (integer, >= 1).");
+        return;
+      }
+
+      const payload = {
+        name,
+        country,
+        amount,
+        ts: Date.now()
+      };
+
+      // отправляем в TV окно
+      sendToTV(payload);
+
+      // (опционально) можно показать и в админ окне тоже:
+      // renderAlert(payload);
+
+      const st = document.getElementById('adminStatus');
+      st.textContent = `Sent to TV: ${name} — ${formatUsd(amount)} — ${country}`;
+    }
+
+    // ===== TV: listen updates =====
+    function onStorageEvent(e) {
+      if (e.key !== STORAGE_KEY || !e.newValue) return;
+      try {
+        const payload = JSON.parse(e.newValue);
+        if (!payload || !payload.ts) return;
+        renderAlert(payload);
+      } catch {}
+    }
+
+    // ===== Init =====
+    document.getElementById('enableSoundBtn').addEventListener('click', async () => {
+      const ok = await ensureAudioRunning();
+      if (ok) {
+        // если алерт уже идёт — включим монетки
+        if (document.getElementById('alert-screen').style.display === 'flex') {
+          startCoinLoop();
+        }
+      }
+    });
+
+    // ТВ: всегда показываем alert-screen как “экран ожидания”
+    if (isTV) {
+      document.getElementById('alert-screen').style.display = 'flex';
+      document.getElementById('control-panel').style.display = 'none';
+      document.getElementById('back-btn').style.display = 'none';
+      window.addEventListener('storage', onStorageEvent);
+
+      // если уже есть последнее значение — можно показать сразу
+      try {
+        const existing = localStorage.getItem(STORAGE_KEY);
+        if (existing) {
+          const payload = JSON.parse(existing);
+          // покажем только если это не пусто и недавно (например, в пределах 5 минут)
+          if (payload && payload.ts && (Date.now() - payload.ts) < 5 * 60 * 1000) {
+            renderAlert(payload);
+          }
+        }
+      } catch {}
+
+      // подсказка: клик по экрану пробует включить звук
+      document.body.addEventListener('click', () => {
+        ensureAudioRunning();
+      }, { once: true });
+
+    } else {
+      // ADMIN init
+      document.getElementById('alert-screen').style.display = 'none';
+      document.getElementById('showBtn').addEventListener('click', showAlertFromAdmin);
+      document.getElementById('amountInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') showAlertFromAdmin();
+      });
+      document.body.addEventListener('click', () => {
+        // заранее "разбудим" аудио, если админ решит показывать алерт тут тоже
+        ensureAudioRunning();
+      }, { once: true });
+    }
+  </script>
+</body>
+</html>
