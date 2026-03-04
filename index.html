@@ -63,7 +63,7 @@
       border-radius: 12px;
       border: 2px solid #ddd;
       font-size: 16px;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      transition: border-color 0.3s, box-shadow 0.3s, transform .2s;
       height: 52px;
       background: #fff;
     }
@@ -102,14 +102,14 @@
       color: #000;
       font-weight: bold;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
       border: none;
       font-size: 18px;
       margin-top: 6px;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.10);
     }
 
     button:hover {
-      transform: scale(1.02);
+      transform: translateY(-1px) scale(1.01);
       box-shadow: 0 0 20px rgba(212, 175, 55, 0.35);
     }
 
@@ -139,6 +139,7 @@
       pointer-events: none;
       z-index: 1;
       overflow: hidden;
+      transform: translateZ(0); /* helps some GPUs */
     }
 
     /* ===== PREMIUM COINS ===== */
@@ -146,9 +147,10 @@
       position: absolute;
       opacity: 0;
       animation-name: fall;
-      animation-timing-function: ease-in;
+      animation-timing-function: linear; /* smoother than ease-in */
       animation-iteration-count: infinite;
       will-change: transform, opacity;
+      transform: translateZ(0);
     }
 
     .coin {
@@ -160,7 +162,6 @@
       place-items: center;
       user-select: none;
 
-      /* premium metal */
       background:
         radial-gradient(circle at 28% 24%, rgba(255,255,255,0.95), rgba(255,255,255,0.0) 42%),
         radial-gradient(circle at 72% 78%, rgba(0,0,0,0.22), rgba(0,0,0,0.0) 50%),
@@ -170,30 +171,24 @@
       outline-offset: -5px;
 
       box-shadow:
-        0 18px 28px rgba(0,0,0,0.20),
-        0 0 26px rgba(255,255,255,0.12),
+        0 14px 22px rgba(0,0,0,0.18),
         inset 0 2px 10px rgba(255,255,255,0.55),
-        inset 0 -16px 26px rgba(0,0,0,0.22);
+        inset 0 -14px 22px rgba(0,0,0,0.20);
 
-      /* 3D vibe */
       transform:
         perspective(800px)
         rotateX(var(--rx, 14deg))
         rotateY(var(--ry, -10deg));
-      filter: drop-shadow(0 10px 10px rgba(0,0,0,0.16));
     }
 
-    /* big glow for huge mode */
     .coin.huge {
       box-shadow:
-        0 22px 34px rgba(0,0,0,0.22),
-        0 0 44px rgba(255,255,255,0.22),
-        0 0 60px rgba(255, 180, 0, 0.22),
+        0 18px 26px rgba(0,0,0,0.20),
+        0 0 44px rgba(255,255,255,0.18),
         inset 0 2px 10px rgba(255,255,255,0.6),
         inset 0 -18px 30px rgba(0,0,0,0.22);
     }
 
-    /* shine streak */
     .coin::before{
       content:"";
       position:absolute;
@@ -208,7 +203,6 @@
       opacity: 0.78;
     }
 
-    /* engraved inner ring */
     .coin::after{
       content:"";
       position:absolute;
@@ -227,13 +221,10 @@
       font-weight: 1000;
       font-size: calc(var(--size, 36px) * 0.56);
       letter-spacing: -0.03em;
-
-      /* embossed symbol */
       color: rgba(0,0,0,0.32);
       text-shadow:
         0 2px 2px rgba(0,0,0,0.16),
-        0 -1px 0 rgba(255,255,255,0.55),
-        0 0 18px rgba(255,255,255,0.22);
+        0 -1px 0 rgba(255,255,255,0.55);
       mix-blend-mode: multiply;
     }
 
@@ -243,10 +234,10 @@
     .coin.coin { --c1:#fff1a8; --c2:#f59e0b; }
 
     @keyframes fall {
-      0%   { transform: translateY(-160px) translateX(var(--drift, 0px)) rotate(0deg); opacity: 0; }
+      0%   { transform: translate3d(0,-160px,0) translateX(var(--drift, 0px)) rotate(0deg); opacity: 0; }
       10%  { opacity: 1; }
-      90%  { opacity: 0.98; }
-      100% { transform: translateY(115vh) translateX(calc(var(--drift, 0px) * 2)) rotate(var(--rot, 420deg)); opacity: 0; }
+      90%  { opacity: 0.96; }
+      100% { transform: translate3d(0,115vh,0) translateX(calc(var(--drift, 0px) * 2)) rotate(var(--rot, 420deg)); opacity: 0; }
     }
 
     .content {
@@ -392,7 +383,7 @@
       <div class="field">
         <label for="amountInput">Amount (USD)</label>
         <input type="number" id="amountInput" placeholder="e.g. 1500" min="1" step="1" inputmode="numeric" />
-        <div class="hint">>= 5,000 → more coins | >= 10,000 → HUGE rain</div>
+        <div class="hint">>= 5,000 → more coins | >= 10,000 → smooth rain (reduced count)</div>
       </div>
 
       <button id="showBtn" type="button">🚀 Show on TV</button>
@@ -431,7 +422,7 @@
     if (isTV) document.body.classList.add('tv');
 
     const ALERT_MS = 8000;
-    const STORAGE_KEY = 'bvv_money_alert_payload_v4';
+    const STORAGE_KEY = 'bvv_money_alert_payload_v5';
 
     let autoCloseTimer = null;
 
@@ -442,24 +433,23 @@
     let boostedSource = null;
     let gainNode = null;
 
+    // animation housekeeping
+    let animCleanupTimer = null;
+
     function showSoundOverlay(show) {
       document.getElementById('sound-overlay').style.display = show ? 'flex' : 'none';
     }
 
     async function setupBoostIfNeeded() {
-      // Подключаем <audio> к WebAudio и чуть усиливаем
-      // В некоторых браузерах может не разрешить до user gesture — поэтому это вызывается при play.
       if (audioCtx) return;
       try {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         boostedSource = audioCtx.createMediaElementSource(coinAudio);
         gainNode = audioCtx.createGain();
-        gainNode.gain.value = 1.6; // усиление (осторожно: может быть громко/клиппинг)
+        gainNode.gain.value = 1.55; // чуть меньше, чтобы мягче
         boostedSource.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-      } catch (e) {
-        // если не получилось — просто игнорим, останется обычный volume=1
-      }
+      } catch (e) {}
     }
 
     async function tryPlayLoopAudio() {
@@ -467,10 +457,9 @@
         await setupBoostIfNeeded();
 
         coinAudio.loop = true;
-        coinAudio.volume = 1.0; // максимум
+        coinAudio.volume = 1.0;
         coinAudio.currentTime = 0;
 
-        // resume AudioContext if suspended
         if (audioCtx && audioCtx.state === 'suspended') {
           await audioCtx.resume();
         }
@@ -504,28 +493,37 @@
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
-    function createParticlesByAmount(amount) {
+    function clearParticles() {
       const container = document.getElementById('particles');
       container.innerHTML = '';
+    }
 
-      // базовые настройки
-      let count = 60;
-      let minSize = 22, maxSize = 48;
-      let minDur = 4.6, maxDur = 7.0;
+    function createParticlesByAmount(amount) {
+      const container = document.getElementById('particles');
+      clearParticles();
 
-      // >= 5000: больше монет
+      // базовые настройки (уменьшены для плавности)
+      let count = 48;
+      let minSize = 22, maxSize = 46;
+      let minDur = 4.8, maxDur = 7.4;
+
+      // >= 5000: больше монет, но без дикого количества
       if (amount >= 5000) {
-        count = 95;
-        minSize = 24; maxSize = 56;
-        minDur = 4.2; maxDur = 6.4;
+        count = 78;
+        minSize = 24; maxSize = 54;
+        minDur = 4.4; maxDur = 6.9;
       }
 
-      // >= 10000: огромные монеты и прям дождь
+      // >= 10000: раньше было 140 и фризило — делаем меньше + чуть дольше длительность
       if (amount >= 10000) {
-        count = 140;
-        minSize = 44; maxSize = 92;
-        minDur = 3.8; maxDur = 5.6;
+        count = 92;               // было 140
+        minSize = 38; maxSize = 78;
+        minDur = 4.2; maxDur = 6.6;
       }
+
+      // небольшая рандомизация count (чтобы не выглядело одинаково)
+      const jitter = Math.round((Math.random() - 0.5) * 10);
+      count = Math.max(30, count + jitter);
 
       for (let i = 0; i < count; i++) {
         const t = weightedPick();
@@ -536,10 +534,8 @@
         const coin = document.createElement('div');
         coin.className = `coin ${t.cls}`;
 
-        // huge styling for >=10000
         if (amount >= 10000) coin.classList.add('huge');
 
-        // random 3D tilt per coin
         const rx = (8 + Math.random() * 18).toFixed(1) + 'deg';
         const ry = (-18 + Math.random() * 36).toFixed(1) + 'deg';
         coin.style.setProperty('--rx', rx);
@@ -555,37 +551,27 @@
         coin.style.setProperty('--size', size.toFixed(0) + 'px');
 
         particle.style.left = (Math.random() * 100) + 'vw';
-        particle.style.animationDelay = (Math.random() * 3.6) + 's';
+
+        // меньше разброс задержки => ощущение более "ровного" дождя
+        particle.style.animationDelay = (Math.random() * 2.2) + 's';
 
         const dur = (minDur + Math.random() * (maxDur - minDur));
         particle.style.animationDuration = dur.toFixed(2) + 's';
 
-        const drift = (-30 + Math.random() * 60);
+        const drift = (-26 + Math.random() * 52);
         particle.style.setProperty('--drift', drift.toFixed(0) + 'px');
 
-        const rot = (240 + Math.random() * 680) * (Math.random() < 0.5 ? -1 : 1);
+        const rot = (220 + Math.random() * 560) * (Math.random() < 0.5 ? -1 : 1);
         particle.style.setProperty('--rot', rot.toFixed(0) + 'deg');
 
         container.appendChild(particle);
       }
     }
 
-    async function renderAlert(payload) {
-      document.getElementById('manager-name').textContent = payload.name || '—';
-      document.getElementById('amountDisplay').textContent = formatUsd(payload.amount || 0);
-      document.getElementById('geo').textContent = payload.country || '—';
-
-      document.getElementById('alert-screen').style.display = 'flex';
-
-      createParticlesByAmount(payload.amount || 0);
-      await tryPlayLoopAudio();
-
-      if (autoCloseTimer) clearTimeout(autoCloseTimer);
-      autoCloseTimer = setTimeout(goBack, ALERT_MS);
-    }
-
-    function goBack() {
+    function resetToIdle() {
+      // Полный сброс после показа: монеты убираем, звук стоп, текст в ожидание
       stopLoopAudio();
+      clearParticles();
 
       if (isTV) {
         document.getElementById('alert-screen').style.display = 'flex';
@@ -596,6 +582,29 @@
         document.getElementById('alert-screen').style.display = 'none';
         document.getElementById('control-panel').style.display = 'block';
       }
+    }
+
+    async function renderAlert(payload) {
+      // на всякий — сбросить возможные хвосты прошлого показа
+      if (autoCloseTimer) clearTimeout(autoCloseTimer);
+      if (animCleanupTimer) clearTimeout(animCleanupTimer);
+
+      document.getElementById('manager-name').textContent = payload.name || '—';
+      document.getElementById('amountDisplay').textContent = formatUsd(payload.amount || 0);
+      document.getElementById('geo').textContent = payload.country || '—';
+
+      document.getElementById('alert-screen').style.display = 'flex';
+
+      createParticlesByAmount(payload.amount || 0);
+      await tryPlayLoopAudio();
+
+      // Через ALERT_MS возвращаемся в idle и чистим монеты
+      autoCloseTimer = setTimeout(resetToIdle, ALERT_MS);
+
+      // Доп. уборка чуть позже (если браузер задержал таймер) — чтобы точно всё обнулилось
+      animCleanupTimer = setTimeout(() => {
+        clearParticles();
+      }, ALERT_MS + 500);
     }
 
     function sendToTV(payload) {
@@ -638,6 +647,7 @@
     if (isTV) {
       document.getElementById('alert-screen').style.display = 'flex';
       document.getElementById('control-panel').style.display = 'none';
+
       window.addEventListener('storage', onStorageEvent);
 
       // клик по ТВ окну — чтобы разблокировать звук/аудио-контекст
@@ -652,10 +662,15 @@
           const payload = JSON.parse(existing);
           if (payload && payload.ts && (Date.now() - payload.ts) < 5 * 60 * 1000) {
             renderAlert(payload);
+          } else {
+            resetToIdle();
           }
+        } else {
+          resetToIdle();
         }
-      } catch {}
-
+      } catch {
+        resetToIdle();
+      }
     } else {
       document.getElementById('alert-screen').style.display = 'none';
       document.getElementById('showBtn').addEventListener('click', showAlertFromAdmin);
@@ -666,6 +681,3 @@
   </script>
 </body>
 </html>
-
-
-
